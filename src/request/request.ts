@@ -9,12 +9,6 @@
 import { Resource, RunFunctionRequest, Resources, Credentials } from "../proto/run_function.js";
 
 /**
- * Connection details map containing connection information like usernames, passwords, and endpoints.
- * Keys are string identifiers and values are Buffer data.
- */
-export type ConnectionDetails = { [key: string]: Buffer };
-
-/**
  * Get the desired composite resource (XR) from the request.
  *
  * The desired composite resource represents the intended state of the composite resource

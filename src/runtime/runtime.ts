@@ -77,11 +77,15 @@ export interface ServerOptions {
 export function getCredentials(
     opts?: ServerOptions,
 ): grpc.ServerCredentials {
-    if (opts?.insecure || opts?.tlsServerCertsDir === "" || opts?.tlsServerCertsDir === undefined ) {
+    // Return insecure credentials if explicitly requested or if no TLS directory specified
+    if (!opts || opts.insecure || !opts.tlsServerCertsDir || opts.tlsServerCertsDir === "") {
         return grpc.ServerCredentials.createInsecure();
     }
+
+    // At this point we know tlsServerCertsDir is defined and non-empty
+    const tlsCertsDir = opts.tlsServerCertsDir;
+
     try {
-        const tlsCertsDir = opts?.tlsServerCertsDir;
         const privateKey = readFileSync(join(tlsCertsDir, "tls.key"));
         const certChain = readFileSync(join(tlsCertsDir, "tls.crt"));
         const rootCerts = readFileSync(join(tlsCertsDir, "ca.crt"));
@@ -91,7 +95,12 @@ export function getCredentials(
             false, // Set to false to make client certificates optional
         );
     } catch (err) {
-        throw err;
+        // Provide a more helpful error message when TLS cert files are missing
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        throw new Error(
+            `Failed to load TLS certificates from "${tlsCertsDir}": ${errorMessage}. ` +
+            `Ensure tls.key, tls.crt, and ca.crt files exist in the directory.`
+        );
     }
 }
 

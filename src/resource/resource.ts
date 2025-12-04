@@ -1,6 +1,5 @@
 // Resource utilities for working with Kubernetes resources and protobuf conversion
 import { Resource, Ready } from "../proto/run_function.js";
-import { Struct } from "../proto/google/protobuf/struct.js";
 
 // Type aliases for better readability
 export type ConnectionDetails = { [key: string]: Buffer };

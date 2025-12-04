@@ -15,7 +15,6 @@ export {
     getRequiredResources,
     getExtraResources,
     getCredentials as getRequestCredentials,
-    type ConnectionDetails,
 } from "./request/request.js";
 
 // Response helpers
@@ -46,6 +45,7 @@ export {
     type Composite,
     type ObservedComposed,
     type DesiredComposed,
+    type ConnectionDetails,
 } from "./resource/resource.js";
 
 // Runtime utilities

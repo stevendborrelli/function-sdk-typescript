@@ -349,11 +349,13 @@ export function setDesiredCompositeResource(
     rsp.desired = { composite: undefined, resources: {} };
   }
 
-  // Create a new resource with the specified ready status
-  rsp.desired.composite = {
-    ...resource,
+  // Create a new resource with the specified ready status using fromPartial
+  // to ensure proper type handling for the protobuf-generated Resource type
+  rsp.desired.composite = Resource.fromPartial({
+    resource: resource.resource,
+    connectionDetails: resource.connectionDetails,
     ready: ready !== undefined ? ready : Ready.READY_UNSPECIFIED,
-  };
+  });
 
   return rsp;
 }
