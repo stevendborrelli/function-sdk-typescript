@@ -9,6 +9,11 @@ export {
     getDesiredCompositeResource,
     getObservedCompositeResource,
     getDesiredComposedResources,
+    getObservedComposedResources,
+    getInput,
+    getContextKey,
+    getRequiredResources,
+    getCredentials,
 } from "./request/request.js";
 
 // Response helpers
@@ -27,7 +32,7 @@ export {
 export {
     newGrpcServer,
     startServer,
-    getCredentials,
+    getServerCredentials,
     type ServerOptions,
 } from "./runtime/runtime.js";
 
@@ -36,6 +41,8 @@ export {
     RunFunctionRequest,
     RunFunctionResponse,
     Resource,
+    Resources,
+    Credentials,
     Severity,
     Result,
     State,

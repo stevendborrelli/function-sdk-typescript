@@ -6,7 +6,8 @@
   "exclude": [
     "dist",
     "node_modules",
-    "src/proto/**"
+    "src/proto/**",
+    "**/*.test.ts"
   ],
   "compilerOptions": {
     // File Layout

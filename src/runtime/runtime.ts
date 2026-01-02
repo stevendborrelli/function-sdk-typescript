@@ -17,8 +17,8 @@ export interface ServerOptions {
     tlsServerCertsDir?: string;
 }
 
-// getCredentials creates gRPC ServerCredentials from TLS files on the filesystem
-export function getCredentials(
+// getServerCredentials creates gRPC ServerCredentials from TLS files on the filesystem
+export function getServerCredentials(
     opts?: ServerOptions,
 ): grpc.ServerCredentials {
     if (opts?.insecure || opts?.tlsServerCertsDir === "" || opts?.tlsServerCertsDir === undefined ) {
@@ -50,13 +50,13 @@ export function newGrpcServer(functionRunner: FunctionRunner, logger: Logger): g
 
 // Helper function to create and start a server
 export function startServer(server: grpc.Server, opts: ServerOptions, logger: Logger): grpc.Server {
-    const creds = getCredentials(opts)
+    const creds = getServerCredentials(opts)
     logger.debug(`serverCredentials type: ${creds.constructor.name}`);
 
     server.bindAsync(
         opts.address,
         creds,
-        (err, addr) => {
+        (err) => {
             if (err) {
                 logger.error(`server bind error: ${err.message}`);
                 return;
