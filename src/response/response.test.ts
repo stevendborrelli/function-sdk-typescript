@@ -1,8 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import {
-  setDesiredCompositeStatus,
-  setDesiredResources,
-} from './response.js';
+import { setDesiredCompositeStatus, setDesiredResources } from './response.js';
 import type { RunFunctionResponse } from '../proto/run_function.js';
 import { Ready } from '../proto/run_function.js';
 
