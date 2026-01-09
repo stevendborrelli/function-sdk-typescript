@@ -232,6 +232,62 @@ export function setDesiredComposedResources(
 }
 
 /**
+ * Set desired resources from unstructured Kubernetes objects.
+ *
+ * This is a simpler alternative to setDesiredComposedResources when you have raw
+ * Kubernetes resource objects and don't need to specify readiness or connection details.
+ * Each resource is converted to the protobuf Resource format with READY_UNSPECIFIED status.
+ *
+ * The function merges new resources with any existing resources in the desired state,
+ * allowing functions to add or modify resources while preserving those set by
+ * previous functions in the pipeline.
+ *
+ * @param rsp - The RunFunctionResponse to update
+ * @param resources - A map of resource names to unstructured Kubernetes objects
+ * @returns The updated response
+ *
+ * @example
+ * ```typescript
+ * rsp = setDesiredResources(rsp, {
+ *   "my-bucket": {
+ *     apiVersion: "s3.aws.upbound.io/v1beta1",
+ *     kind: "Bucket",
+ *     metadata: { name: "my-bucket" },
+ *     spec: { forProvider: { region: "us-west-2" } }
+ *   },
+ *   "my-db": {
+ *     apiVersion: "rds.aws.upbound.io/v1beta1",
+ *     kind: "Instance",
+ *     metadata: { name: "my-db" },
+ *     spec: { forProvider: { instanceClass: "db.t3.micro" } }
+ *   }
+ * });
+ * ```
+ */
+export function setDesiredResources(
+  rsp: RunFunctionResponse,
+  resources: { [key: string]: { [key: string]: any } },
+): RunFunctionResponse {
+  // Ensure desired state exists
+  if (!rsp.desired) {
+    rsp.desired = { composite: undefined, resources: {} };
+  }
+
+  // Convert each resource to Resource format
+  const convertedResources: { [key: string]: Resource } = {};
+  for (const [name, resource] of Object.entries(resources)) {
+    convertedResources[name] = Resource.fromJSON({ resource });
+  }
+
+  // Merge the new resources with existing ones
+  rsp.desired.resources = merge(rsp.desired.resources || {}, convertedResources) as {
+    [key: string]: Resource;
+  };
+
+  return rsp;
+}
+
+/**
  * Update a resource by merging source into target.
  *
  * This function performs a deep merge of the source resource into the target resource,
@@ -282,11 +338,26 @@ export function update(src: Resource, tgt: Resource): Resource {
 export function setDesiredCompositeStatus(
 { rsp, status }: { rsp: RunFunctionResponse; status: { [key: string]: any; }; },
 ): RunFunctionResponse {
-  if (rsp.desired?.composite?.resource) {
-    rsp.desired.composite.resource = merge(rsp.desired.composite.resource, {
-      "status": status,
-    }) as { [key: string]: any };
+  // Ensure desired state exists
+  if (!rsp.desired) {
+    rsp.desired = { composite: undefined, resources: {} };
   }
+
+  // Ensure composite exists
+  if (!rsp.desired.composite) {
+    rsp.desired.composite = Resource.fromJSON({});
+  }
+
+  // Ensure resource exists
+  if (!rsp.desired.composite.resource) {
+    rsp.desired.composite.resource = {};
+  }
+
+  // Merge the status
+  rsp.desired.composite.resource = merge(rsp.desired.composite.resource, {
+    "status": status,
+  }) as { [key: string]: any };
+
   return rsp;
 }
 
