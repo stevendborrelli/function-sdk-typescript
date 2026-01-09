@@ -23,6 +23,7 @@ export {
     normal,
     warning,
     setDesiredComposedResources,
+    setDesiredResources,
     setDesiredCompositeStatus,
     setDesiredCompositeResource,
     updateDesiredComposedResources,
