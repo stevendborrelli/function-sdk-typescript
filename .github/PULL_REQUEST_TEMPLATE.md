@@ -1,8 +1,8 @@
 <!--
 Thank you for helping to improve Crossplane!
 
-Please read through https://git.io/fj2m9 if this is your first time opening a
-Crossplane pull request. Find us in https://slack.crossplane.io/messages/dev if
+Please read through <https://github.com/crossplane/crossplane/blob/main/CONTRIBUTING.md> if this is your first time opening a
+Crossplane pull request. Find us in <https://slack.crossplane.io/messages/dev> if
 you need any help contributing.
 -->
 
@@ -26,5 +26,5 @@ I have:
 - [ ] Read and followed Crossplane's [contribution process].
 - [ ] Added or updated unit tests for my change.
 
-[contribution process]: https://git.io/fj2m9
+[contribution process]: https://github.com/crossplane/crossplane/blob/main/CONTRIBUTING.md
 [docs]: https://docs.crossplane.io/contribute/contribute
