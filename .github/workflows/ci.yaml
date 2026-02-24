@@ -6,13 +6,55 @@ on:
       - main
       - release-*
   pull_request: {}
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Package version (e.g. v0.1.0)
+        required: false
 
 env:
-  NODE_VERSION: "25"
+  NODE_VERSION: "24"
 
 jobs:
+  # Compute the package version once and share it with all jobs that need it
+  version:
+    runs-on: &default-runner ubuntu-24.04
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      npm-tag: ${{ steps.version.outputs.npm-tag }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{env.NODE_VERSION}}
+          registry-url: "https://registry.npmjs.org"
+      # If a version wasn't explicitly passed as a workflow_dispatch input we
+      # default to version $(npm pkg get version)-<git-commit-date>-<git-short-sha>, for example
+      # v0.1.1-20231101115142-1091066df799.
+      - name: Compute Package Version
+        id: version
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          if [ -n "${INPUT_VERSION}" ]; then
+            VERSION="${INPUT_VERSION}"
+            RELEASE_TYPE="latest"
+          else
+            VERSION="v$(npm pkg get version | tr -d '"')-$(date -d@$(git show -s --format=%ct) +%Y%m%d%H%M%S)-$(git rev-parse --short=12 HEAD)"
+            RELEASE_TYPE="next"
+          fi
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "Computed version: ${VERSION}"
+          echo "npm-tag=${RELEASE_TYPE}" >> $GITHUB_OUTPUT
+          echo "npm-tag: ${RELEASE_TYPE}"
+
   protobuf-check:
-    runs-on: ubuntu-24.04
+    runs-on: *default-runner
 
     steps:
       - name: Checkout
@@ -45,7 +87,7 @@ jobs:
           echo "No changes detected in src directory"
 
   lint:
-    runs-on: ubuntu-24.04
+    runs-on: *default-runner
 
     steps:
       - name: Checkout
@@ -61,7 +103,7 @@ jobs:
         run: npm run lint
 
   test:
-    runs-on: ubuntu-24.04
+    runs-on: *default-runner
 
     steps:
       - name: Checkout
@@ -77,7 +119,7 @@ jobs:
         run: npm test
 
   build:
-    runs-on: ubuntu-24.04
+    runs-on: *default-runner
 
     steps:
       - name: Checkout
@@ -90,3 +132,38 @@ jobs:
       - run: npm ci
       - run: npm run clean
       - run: npm run build
+
+  publish:
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    runs-on: *default-runner
+    needs:
+      - version
+      - protobuf-check
+      - test
+      - lint
+      - build
+    permissions:
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{env.NODE_VERSION}}
+          registry-url: "https://registry.npmjs.org"
+
+      - run: npm ci
+      - name: Set package version
+        env:
+          VERSION: ${{ needs.version.outputs.version }}
+        run: npm version "$VERSION" --no-git-tag-version
+
+      - run: npm run clean
+      - run: npm run build
+
+      - name: Publish to npm
+        env:
+          NPM_TAG: ${{ needs.version.outputs.npm-tag }}
+        run: npm publish --provenance --access public --tag "${NPM_TAG}"
