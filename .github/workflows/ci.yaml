@@ -32,13 +32,10 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: ${{env.NODE_VERSION}}
-
+          registry-url: "https://registry.npmjs.org"
       # If a version wasn't explicitly passed as a workflow_dispatch input we
       # default to version $(npm pkg get version)-<git-commit-date>-<git-short-sha>, for example
       # v0.1.1-20231101115142-1091066df799.
-      - name: Compute Package Version
-        id: version
-        run: |
       - name: Compute Package Version
         id: version
         env:
@@ -46,8 +43,6 @@ jobs:
         run: |
           if [ -n "${INPUT_VERSION}" ]; then
             VERSION="${INPUT_VERSION}"
-            RELEASE_TYPE="latest"
-          else
             RELEASE_TYPE="latest"
           else
             VERSION="v$(npm pkg get version | tr -d '"')-$(date -d@$(git show -s --format=%ct) +%Y%m%d%H%M%S)-$(git rev-parse --short=12 HEAD)"
@@ -143,9 +138,12 @@ jobs:
     runs-on: *default-runner
     needs:
       - version
+      - protobuf-check
       - test
       - lint
       - build
+    permissions:
+      id-token: write
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -154,12 +152,10 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: ${{env.NODE_VERSION}}
+          registry-url: "https://registry.npmjs.org"
 
       - run: npm ci
-      - name: Publish to npm
-        env:
-          NPM_TAG: ${{ needs.version.outputs.npm-tag }}
-        run: npm publish --tag "${NPM_TAG}"
+      - name: Set package version
         env:
           VERSION: ${{ needs.version.outputs.version }}
         run: npm version "$VERSION" --no-git-tag-version
@@ -168,4 +164,6 @@ jobs:
       - run: npm run build
 
       - name: Publish to npm
-        run: npm publish --tag ${{ needs.version.outputs.npm-tag }}
+        env:
+          NPM_TAG: ${{ needs.version.outputs.npm-tag }}
+        run: npm publish --provenance --access public --tag "${NPM_TAG}"
