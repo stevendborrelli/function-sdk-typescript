@@ -13,7 +13,7 @@ on:
         required: false
 
 env:
-  NODE_VERSION: "25"
+  NODE_VERSION: "24"
 
 jobs:
   # Compute the package version once and share it with all jobs that need it
