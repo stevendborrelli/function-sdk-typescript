@@ -9,7 +9,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "github.com/crossplane/function-sdk-typescript"
+    "url": "https://github.com/crossplane/function-sdk-typescript"
   },
   "license": "Apache-2.0",
   "author": "Steven Borrelli",
