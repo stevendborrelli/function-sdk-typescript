@@ -158,7 +158,7 @@ jobs:
       - name: Set package version
         env:
           VERSION: ${{ needs.version.outputs.version }}
-        run: npm version "$VERSION" --no-git-tag-version
+        run: npm version "${VERSION#v}" --no-git-tag-version
 
       - run: npm run clean
       - run: npm run build
